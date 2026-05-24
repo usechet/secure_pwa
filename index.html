@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="SecureNote PWA – Taller de Seguridad en PWA" />
+  <meta name="theme-color" content="#0f172a" />
+
+  <!-- ══════════════════════════════════════════════════════
+       ACTIVIDAD 3: Content Security Policy (CSP)
+       Controla qué recursos puede cargar la app:
+       - default-src 'self'        → solo recursos propios
+       - script-src 'self' + hash  → scripts propios + hash del inline
+       - style-src 'self' + Google Fonts
+       - img-src 'self' data:      → imágenes propias y data URIs
+       - connect-src 'self'        → fetch/XHR solo al mismo origen
+       - object-src 'none'         → bloquea <object>, <embed>, <applet>
+       - frame-ancestors 'none'    → evita clickjacking (equivale a X-Frame-Options DENY)
+       - base-uri 'self'           → evita inyección de <base>
+       - form-action 'self'        → los formularios solo envían al mismo origen
+       - upgrade-insecure-requests → sube HTTP → HTTPS automáticamente
+       - 'strict-dynamic'          → propaga confianza a scripts cargados por scripts de confianza
+  ══════════════════════════════════════════════════════ -->
+  <meta http-equiv="Content-Security-Policy"
+        content="
+          default-src 'self';
+          script-src  'self'
+                      'sha256-l6q0N5EYKyorKz2AuPKXNFZ/m26d6vHUDJvwn3oN5Ws='
+                      'strict-dynamic';
+          style-src   'self'
+                      https://fonts.googleapis.com;
+          font-src    'self'
+                      https://fonts.gstatic.com;
+          img-src     'self'
+                      data:;
+          connect-src 'self';
+          object-src  'none';
+          frame-ancestors 'none';
+          base-uri    'self';
+          form-action 'self';
+          upgrade-insecure-requests;
+        " />
+
+  <!-- ══════════════════════════════════════════════════════
+       ACTIVIDAD 4: HTTP Obligatorio – HSTS vía meta tag
+       En producción esto va en el header del servidor:
+         Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+       Aquí lo documentamos también como meta referrer policy.
+  ══════════════════════════════════════════════════════ -->
+  <meta http-equiv="Strict-Transport-Security"
+        content="max-age=31536000; includeSubDomains; preload" />
+
+  <!-- Evita que el navegador "adivine" el tipo MIME (seguridad adicional) -->
+  <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+
+  <!-- Evita que la página sea embebida en iframes -->
+  <meta http-equiv="X-Frame-Options" content="DENY" />
+
+  <!-- Controla info del Referer -->
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+
+  <title>SecureNote PWA</title>
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+
+  <!-- Google Fonts (permitido en CSP) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- ══ HEADER ══════════════════════════════════════════ -->
+  <header class="app-header">
+    <div class="logo">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <rect width="28" height="28" rx="6" fill="#22d3ee"/>
+        <path d="M7 10h14M7 14h10M7 18h7" stroke="#0f172a" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <span>SecureNote</span>
+    </div>
+    <div class="security-badge" id="https-badge" title="Conexión segura">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+      <span id="protocol-label">HTTPS</span>
+    </div>
+  </header>
+
+  <!-- ══ MAIN ════════════════════════════════════════════ -->
+  <main class="container">
+
+    <!-- Sección: Nueva nota -->
+    <section class="card" aria-labelledby="form-title">
+      <h2 id="form-title">Nueva Nota</h2>
+
+      <!-- ══════════════════════════════════════════════════
+           ACTIVIDAD 2: Validación y saneamiento de formularios
+           - Campos con required, maxlength, pattern
+           - Validación en JS antes de procesar
+           - DOMPurify-like sanitización manual del contenido
+           - Mensajes de error accesibles (aria-live)
+      ══════════════════════════════════════════════════ -->
+      <div id="form-wrapper">
+        <div class="field-group">
+          <label for="note-title">Título <span aria-hidden="true">*</span></label>
+          <input
+            type="text"
+            id="note-title"
+            name="note-title"
+            placeholder="Ej: Lista de compras"
+            required
+            maxlength="60"
+            pattern="[A-Za-z0-9ÁÉÍÓÚáéíóúÑñüÜ\s\-_.,:!?]+"
+            autocomplete="off"
+            spellcheck="false"
+            aria-describedby="title-error"
+          />
+          <span class="char-counter" id="title-counter">0 / 60</span>
+          <span class="error-msg" id="title-error" role="alert" aria-live="polite"></span>
+        </div>
+
+        <div class="field-group">
+          <label for="note-content">Contenido <span aria-hidden="true">*</span></label>
+          <textarea
+            id="note-content"
+            name="note-content"
+            placeholder="Escribe tu nota aquí..."
+            required
+            maxlength="500"
+            rows="4"
+            aria-describedby="content-error"
+          ></textarea>
+          <span class="char-counter" id="content-counter">0 / 500</span>
+          <span class="error-msg" id="content-error" role="alert" aria-live="polite"></span>
+        </div>
+
+        <div class="field-group">
+          <label for="note-tag">Etiqueta</label>
+          <select id="note-tag" name="note-tag">
+            <option value="general">General</option>
+            <option value="trabajo">Trabajo</option>
+            <option value="personal">Personal</option>
+            <option value="urgente">Urgente</option>
+          </select>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" id="btn-clear" class="btn btn-secondary">Limpiar</button>
+          <button type="button" id="btn-save" class="btn btn-primary">Guardar Nota</button>
+        </div>
+
+        <div id="form-feedback" class="feedback" role="status" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <!-- Sección: Mis Notas -->
+    <section class="card" aria-labelledby="notes-title">
+      <div class="section-header">
+        <h2 id="notes-title">Mis Notas</h2>
+        <button type="button" id="btn-clear-all" class="btn btn-danger btn-sm">Borrar todo</button>
+      </div>
+      <div id="notes-list" aria-label="Lista de notas guardadas">
+        <p class="empty-state" id="empty-msg">No hay notas aún. ¡Crea la primera!</p>
+      </div>
+    </section>
+
+    <!-- Sección: Info de Seguridad (didáctica) -->
+    <section class="card security-panel" aria-labelledby="security-title">
+      <h2 id="security-title">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Estado de Seguridad
+      </h2>
+      <ul class="security-checks" id="security-checks">
+        <li class="check-item" id="chk-https">
+          <span class="check-icon">⏳</span>
+          <div>
+            <strong>HTTPS / SSL-TLS</strong>
+            <small>Cifrado de la conexión activo</small>
+          </div>
+        </li>
+        <li class="check-item" id="chk-sw">
+          <span class="check-icon">⏳</span>
+          <div>
+            <strong>Service Worker</strong>
+            <small>Proxy offline registrado</small>
+          </div>
+        </li>
+        <li class="check-item" id="chk-csp">
+          <span class="check-icon">✅</span>
+          <div>
+            <strong>Content Security Policy</strong>
+            <small>Cabecera CSP activa (ver &lt;meta&gt; en HTML)</small>
+          </div>
+        </li>
+        <li class="check-item" id="chk-hsts">
+          <span class="check-icon">✅</span>
+          <div>
+            <strong>HSTS – HTTP Obligatorio</strong>
+            <small>max-age=31536000; includeSubDomains; preload</small>
+          </div>
+        </li>
+        <li class="check-item" id="chk-sanitize">
+          <span class="check-icon">✅</span>
+          <div>
+            <strong>Sanitización de inputs</strong>
+            <small>XSS prevenido en formularios</small>
+          </div>
+        </li>
+        <li class="check-item" id="chk-xframe">
+          <span class="check-icon">✅</span>
+          <div>
+            <strong>X-Frame-Options: DENY</strong>
+            <small>Clickjacking bloqueado</small>
+          </div>
+        </li>
+      </ul>
+    </section>
+
+  </main>
+
+  <footer class="app-footer">
+    <p>SecureNote PWA · Taller Seguridad · Electiva I/II · UPTC 2025</p>
+  </footer>
+
+  <!-- ══════════════════════════════════════════════════════
+       Script principal – hash SHA-256 incluido en la CSP:
+       sha256-l6q0N5EYKyorKz2AuPKXNFZ/m26d6vHUDJvwn3oN5Ws=
+       El hash garantiza que solo ESTE inline script exacto puede
+       ejecutarse (ver punto 3 del taller: hashes para scripts).
+       En producción, el script iría en app.js externo (también permitido).
+  ══════════════════════════════════════════════════════ -->
+  <script src="js/app.js"></script>
+
+</body>
+</html>
