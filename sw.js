@@ -1,8 +1,12 @@
+// Service Worker de SecureNote PWA
+// Actividad 1: habilita la PWA con cache offline
+// Solo funciona en HTTPS o localhost (refuerza el uso de SSL/TLS)
+
 "use strict";
 
 const CACHE_NAME = "securenote-v1";
 
-// Lista blanca de rutas propias a cachear
+// Recursos propios que se guardan en cache al instalar
 const PRECACHE_URLS = [
   "./",
   "./index.html",
@@ -13,36 +17,29 @@ const PRECACHE_URLS = [
   "./icons/icon-512.png",
 ];
 
-/* ── Instalación: pre-cachear recursos ─────────────────── */
+// Instalacion: guarda los recursos en cache
 self.addEventListener("install", event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(PRECACHE_URLS);
-    })
+    caches.open(CACHE_NAME).then(cache => cache.addAll(PRECACHE_URLS))
   );
-  // Activa de inmediato sin esperar a que se cierre la pestaña anterior
   self.skipWaiting();
 });
 
-/* ── Activación: eliminar cachés obsoletas ─────────────── */
+// Activacion: elimina caches de versiones anteriores
 self.addEventListener("activate", event => {
   event.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(
-        keys
-          .filter(k => k !== CACHE_NAME)
-          .map(k => caches.delete(k))
-      )
+      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
     )
   );
   self.clients.claim();
 });
 
-/* ── Fetch: estrategia Cache-first con red de respaldo ─── */
+// Fetch: estrategia cache-first con red como respaldo
 self.addEventListener("fetch", event => {
   const url = new URL(event.request.url);
 
-  // Solo interceptamos peticiones GET al mismo origen
+  // Solo intercepta GET del mismo origen
   if (event.request.method !== "GET") return;
   if (url.origin !== self.location.origin) return;
 
@@ -50,26 +47,17 @@ self.addEventListener("fetch", event => {
     caches.match(event.request).then(cached => {
       if (cached) return cached;
 
-      // No está en caché: buscar en red y guardar (solo respuestas válidas)
+      // No esta en cache: solicita a la red y guarda la respuesta
       return fetch(event.request).then(response => {
-        // Solo cachear respuestas del mismo origen y sin errores
-        if (
-          !response ||
-          response.status !== 200 ||
-          response.type !== "basic"
-        ) {
+        // Solo cachea respuestas validas del mismo origen
+        if (!response || response.status !== 200 || response.type !== "basic") {
           return response;
         }
-
-        // Clonar porque response es un stream de un solo uso
         const responseToCache = response.clone();
-        caches.open(CACHE_NAME).then(cache => {
-          cache.put(event.request, responseToCache);
-        });
-
+        caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseToCache));
         return response;
       }).catch(() => {
-        // Si no hay red y no está en caché → fallback offline
+        // Sin red y sin cache: devuelve la pagina principal como fallback
         return caches.match("./index.html");
       });
     })
