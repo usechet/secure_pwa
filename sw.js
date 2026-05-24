@@ -1,17 +1,3 @@
-/**
- * sw.js – Service Worker de SecureNote PWA
- * ─────────────────────────────────────────────────────────
- * ACTIVIDAD 1: PWA con caché offline
- * El SW solo puede registrarse bajo HTTPS (o localhost),
- * lo que refuerza la exigencia de SSL/TLS (Actividad 1).
- *
- * SEGURIDAD en el SW:
- *  - Solo cachea recursos del mismo origen ('self')
- *  - Valida que las respuestas sean 'basic' (mismo origen)
- *    antes de guardarlas; evita cachear respuestas CORS opacas.
- *  - No cachea respuestas con estado de error.
- */
-
 "use strict";
 
 const CACHE_NAME = "securenote-v1";

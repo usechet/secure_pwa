@@ -9,17 +9,17 @@
   <!-- ══════════════════════════════════════════════════════
        ACTIVIDAD 3: Content Security Policy (CSP)
        Controla qué recursos puede cargar la app:
-       - default-src 'self'        → solo recursos propios
-       - script-src 'self' + hash  → scripts propios + hash del inline
+       - default-src 'self'        - solo recursos propios
+       - script-src 'self' + hash  - scripts propios + hash del inline
        - style-src 'self' + Google Fonts
-       - img-src 'self' data:      → imágenes propias y data URIs
-       - connect-src 'self'        → fetch/XHR solo al mismo origen
-       - object-src 'none'         → bloquea <object>, <embed>, <applet>
-       - frame-ancestors 'none'    → evita clickjacking (equivale a X-Frame-Options DENY)
-       - base-uri 'self'           → evita inyección de <base>
-       - form-action 'self'        → los formularios solo envían al mismo origen
-       - upgrade-insecure-requests → sube HTTP → HTTPS automáticamente
-       - 'strict-dynamic'          → propaga confianza a scripts cargados por scripts de confianza
+       - img-src 'self' data:      - imágenes propias y data URIs
+       - connect-src 'self'        - fetch/XHR solo al mismo origen
+       - object-src 'none'         - bloquea <object>, <embed>, <applet>
+       - frame-ancestors 'none'    - evita clickjacking (equivale a X-Frame-Options DENY)
+       - base-uri 'self'           - evita inyección de <base>
+       - form-action 'self'        - los formularios solo envían al mismo origen
+       - upgrade-insecure-requests - sube HTTP - HTTPS automáticamente
+       - 'strict-dynamic'          - propaga confianza a scripts cargados por scripts de confianza
   ══════════════════════════════════════════════════════ -->
   <meta http-equiv="Content-Security-Policy"
         content="
@@ -41,12 +41,6 @@
           upgrade-insecure-requests;
         " />
 
-  <!-- ══════════════════════════════════════════════════════
-       ACTIVIDAD 4: HTTP Obligatorio – HSTS vía meta tag
-       En producción esto va en el header del servidor:
-         Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
-       Aquí lo documentamos también como meta referrer policy.
-  ══════════════════════════════════════════════════════ -->
   <meta http-equiv="Strict-Transport-Security"
         content="max-age=31536000; includeSubDomains; preload" />
 

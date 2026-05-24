@@ -1,31 +1,14 @@
-/**
- * SecureNote PWA – app.js
- * Servido desde 'self': cumple la CSP (script-src 'self')
- * ─────────────────────────────────────────────────────────
- * ACTIVIDAD 2: Validación y saneamiento de formularios
- *   - sanitizeText(): escapa HTML para prevenir XSS
- *   - validateTitle() / validateContent(): reglas de negocio
- *   - Retroalimentación en tiempo real con contadores
- *   - Mensaje de error accesible (aria-live)
- */
-
 "use strict";
 
-/* ══════════════════════════════════════════════════════
-   1.  SANITIZACIÓN – Prevención de XSS
-   Convierte caracteres especiales HTML en entidades
-   para que nunca se interpreten como código.
-══════════════════════════════════════════════════════ */
+ // 1.  SANITIZACIÓN – Prevención de XSS
 function sanitizeText(raw) {
-  // Usamos un nodo temporal: el navegador hace el escape
   const div = document.createElement("div");
   div.appendChild(document.createTextNode(String(raw)));
   return div.innerHTML;
 }
 
-/* ══════════════════════════════════════════════════════
-   2.  VALIDACIÓN DE CAMPOS
-══════════════════════════════════════════════════════ */
+// 2.  VALIDACIÓN DE CAMPOS
+
 const TITLE_PATTERN = /^[A-Za-z0-9ÁÉÍÓÚáéíóúÑñüÜ\s\-_.,:!?]+$/;
 
 function validateTitle(value) {
@@ -43,9 +26,8 @@ function validateContent(value) {
   return "";
 }
 
-/* ══════════════════════════════════════════════════════
-   3.  REFERENCIAS AL DOM
-══════════════════════════════════════════════════════ */
+// 3.  REFERENCIAS AL DOM
+
 const titleInput    = document.getElementById("note-title");
 const contentInput  = document.getElementById("note-content");
 const tagSelect     = document.getElementById("note-tag");
@@ -62,9 +44,8 @@ const formFeedback  = document.getElementById("form-feedback");
 const protocolLabel = document.getElementById("protocol-label");
 const httpsBadge    = document.getElementById("https-badge");
 
-/* ══════════════════════════════════════════════════════
-   4.  CONTADORES DE CARACTERES EN TIEMPO REAL
-══════════════════════════════════════════════════════ */
+
+// 4.  CONTADORES DE CARACTERES EN TIEMPO REAL
 function updateCounter(input, counterEl, max) {
   const len = input.value.length;
   counterEl.textContent = `${len} / ${max}`;
@@ -96,9 +77,7 @@ function showFieldError(input, errorEl, msg) {
   }
 }
 
-/* ══════════════════════════════════════════════════════
-   5.  NOTAS – CRUD básico con localStorage
-══════════════════════════════════════════════════════ */
+// 5.  NOTAS – CRUD básico con localStorage
 let notes = [];
 
 function loadNotes() {
@@ -113,7 +92,6 @@ function saveNotes() {
 }
 
 function renderNotes() {
-  // Vaciamos solo los nodos nota (no el mensaje vacío)
   const items = notesList.querySelectorAll(".note-item");
   items.forEach(el => el.remove());
 
@@ -128,8 +106,6 @@ function renderNotes() {
     item.className = "note-item";
     item.setAttribute("role", "article");
 
-    // ── IMPORTANTE: usamos sanitizeText() en TODOS los datos del usuario
-    //    antes de insertarlos en el DOM. Prevención XSS (Actividad 2).
     item.innerHTML = `
       <div class="note-body">
         <div class="note-header">
@@ -145,9 +121,8 @@ function renderNotes() {
   });
 }
 
-/* ══════════════════════════════════════════════════════
-   6.  GUARDAR NOTA
-══════════════════════════════════════════════════════ */
+
+// 6.  GUARDAR NOTA
 btnSave.addEventListener("click", () => {
   // (a) Validar
   const titleErr   = validateTitle(titleInput.value);
@@ -181,9 +156,9 @@ btnSave.addEventListener("click", () => {
   showFeedback("✓ Nota guardada correctamente.", "ok");
 });
 
-/* ══════════════════════════════════════════════════════
-   7.  ELIMINAR NOTA
-══════════════════════════════════════════════════════ */
+
+// 7.  ELIMINAR NOTA
+
 notesList.addEventListener("click", e => {
   const btn = e.target.closest(".btn-del");
   if (!btn) return;
@@ -193,9 +168,8 @@ notesList.addEventListener("click", e => {
   renderNotes();
 });
 
-/* ══════════════════════════════════════════════════════
-   8.  BORRAR TODO
-══════════════════════════════════════════════════════ */
+// 8.  BORRAR TODO
+
 btnClearAll.addEventListener("click", () => {
   if (!notes.length) return;
   if (!confirm("¿Borrar todas las notas? Esta acción no se puede deshacer.")) return;
@@ -204,9 +178,8 @@ btnClearAll.addEventListener("click", () => {
   renderNotes();
 });
 
-/* ══════════════════════════════════════════════════════
-   9.  LIMPIAR FORMULARIO
-══════════════════════════════════════════════════════ */
+
+//9.  LIMPIAR FORMULARIO
 function clearForm() {
   titleInput.value   = "";
   contentInput.value = "";
@@ -227,9 +200,7 @@ btnClear.addEventListener("click", () => {
   formFeedback.className   = "feedback";
 });
 
-/* ══════════════════════════════════════════════════════
-   10. FEEDBACK TEMPORAL
-══════════════════════════════════════════════════════ */
+// 10. FEEDBACK TEMPORAL
 let feedbackTimer;
 function showFeedback(msg, type) {
   formFeedback.textContent = msg;
@@ -241,10 +212,6 @@ function showFeedback(msg, type) {
   }, 3500);
 }
 
-/* ══════════════════════════════════════════════════════
-   11. ACTIVIDAD 1 & 4: Verificar protocolo HTTPS en runtime
-       Refleja si la app corre bajo HTTPS (SSL/TLS activo)
-══════════════════════════════════════════════════════ */
 function checkProtocol() {
   const chkHttps = document.getElementById("chk-https");
   if (location.protocol === "https:") {
@@ -258,11 +225,6 @@ function checkProtocol() {
   }
 }
 
-/* ══════════════════════════════════════════════════════
-   12. ACTIVIDAD 1: Registrar Service Worker (PWA)
-       El SW permite caché offline y es requisito de las PWA.
-       Solo funciona en HTTPS o localhost.
-══════════════════════════════════════════════════════ */
 async function registerSW() {
   const chkSw = document.getElementById("chk-sw");
   if (!("serviceWorker" in navigator)) {
@@ -278,9 +240,6 @@ async function registerSW() {
   }
 }
 
-/* ══════════════════════════════════════════════════════
-   13. Helpers para el panel de estado de seguridad
-══════════════════════════════════════════════════════ */
 function markCheck(liEl, ok, detail) {
   if (!liEl) return;
   const icon   = liEl.querySelector(".check-icon");
@@ -291,9 +250,6 @@ function markCheck(liEl, ok, detail) {
   liEl.classList.toggle("fail", !ok);
 }
 
-/* ══════════════════════════════════════════════════════
-   INIT
-══════════════════════════════════════════════════════ */
 (function init() {
   loadNotes();
   renderNotes();
