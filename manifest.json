@@ -1,7 +1,7 @@
 {
   "name": "SecureNote PWA",
   "short_name": "SecureNote",
-  "description": "Taller de Seguridad en PWA – Electiva I/II UPTC",
+  "description": "Taller de Seguridad en PWA – Electiva III UPTC",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0f172a",
