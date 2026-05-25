@@ -255,7 +255,20 @@ document.addEventListener("DOMContentLoaded", function () {
       markCheck("chk-sw", false, "Error al registrar SW: " + err.message);
     });
   }
+  document.addEventListener("DOMContentLoaded", function () {
 
+  console.log("APP INICIADA");
+
+  console.log("ANTES DE LOAD");
+
+  loadNotes();
+  renderNotes();
+  checkProtocol();
+  registerSW();
+
+  console.log("APP TERMINADA");
+  
+});
   // Inicializacion
   loadNotes();
   renderNotes();
